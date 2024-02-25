@@ -1,23 +1,28 @@
-# Use an official Ubuntu base image
+# Use an official Ubuntu as a parent image
 FROM ubuntu:latest
 
-# Install Python, pip, Git, and other necessary tools
+# Set the working directory in the container
+WORKDIR /usr/src/app
+
+# Install python, pip, git, and zip
 RUN apt-get update && \
     apt-get install -y python3 python3-pip git zip && \
-    apt-get clean
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
-WORKDIR /app
+# Copy the current directory contents into the container at /usr/src/app
+COPY . .
 
-# Copy the requirements file first, for separate dependency resolving
-COPY requirements.txt /app/
-RUN pip3 install -r requirements.txt
+# Install any needed packages specified in requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Copy the rest of your application
-COPY . /app
-
-# Expose the port the app runs on
+# Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Command to run the Flask app
-CMD ["python3", "app.py"]
+# Define environment variable
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=5000
+
+# Run app.py when the container launches
+CMD ["flask", "run"]
